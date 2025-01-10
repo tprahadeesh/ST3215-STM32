@@ -40,7 +40,7 @@ void SetID (int ID){
 	uint8_t param_array[2]={EEPROM_ID,ID};
 	packet.Header_1 = HEADER;
 	packet.Header_2 = HEADER;
-	packet.Packet_ID = id;
+	packet.Packet_ID = 2;
 	packet.Length = 0x04;
 	packet.Instruction = COMMAND_WRITE_DATA;
 	packet.Param = param_array;
@@ -123,40 +123,110 @@ void Write_LockFlag(int ID,int flag){
 //    AxelFlow_fire(&huart2, packet);
 //}
 
-void Sync_write(SyncWrite_Packet write_packet){
+//void Sync_write(SyncWrite_Packet write_packet){
+//    unsigned char lowByte_p, highByte_p;
+//    unsigned char lowByte_t, highByte_t;
+//    unsigned char lowByte_s, highByte_s;
+//
+//
+//	uint8_t param_array[sizeof(write_packet.ID)+sizeof(write_packet.pos)+sizeof(write_packet.speed)+sizeof(write_packet.time)+2];
+//	int i;
+//	param_array[0]=0x2A;
+//	param_array[1]=0x06;
+//	int count=2;
+//	for (i=0;i<(sizeof(write_packet.ID));i++){
+//		int_to_hex(write_packet.pos[i],&lowByte_p,&highByte_p);
+//		int_to_hex(write_packet.time[i],&lowByte_t,&highByte_t);
+//		int_to_hex(write_packet.speed[i],&lowByte_s,&highByte_s);
+//		param_array[count++] = write_packet.ID[i];
+//		param_array[count++]= lowByte_p;
+//		param_array[count++]= highByte_p;
+//		param_array[count++]= 0;
+//		param_array[count++]= 0;
+//		param_array[count++]= lowByte_s;
+//		param_array[count++]= highByte_s;
+//	}
+////	HAL_UART_Transmit(&huart1, param_array, sizeof(param_array),HAL_MAX_DELAY);
+//	packet.Header_1 = HEADER;
+//	packet.Header_2 = HEADER;
+//	packet.Packet_ID = 0xFE;
+//	packet.Length = sizeof(param_array)+2;
+//	packet.Instruction = COMMAND_SYNC_WRITE;
+//	packet.Param = param_array;
+//	packet.Checksum = getChecksum(packet);
+//    AxelFlow_fire(&huart2, packet);
+//}
+void Sync_write(SyncWrite_Packet write_packet) {
     unsigned char lowByte_p, highByte_p;
     unsigned char lowByte_t, highByte_t;
     unsigned char lowByte_s, highByte_s;
 
 
-	uint8_t param_array[sizeof(write_packet.ID)+sizeof(write_packet.pos)+sizeof(write_packet.speed)+sizeof(write_packet.time)+2];
-	int i;
-	param_array[0]=0x2A;
-	param_array[1]=0x06;
-	int count=2;
-	for (i=0;i<(sizeof(write_packet.ID));i++){
-		int_to_hex(write_packet.pos[i],&lowByte_p,&highByte_p);
-		int_to_hex(write_packet.time[i],&lowByte_t,&highByte_t);
-		int_to_hex(write_packet.speed[i],&lowByte_s,&highByte_s);
-		param_array[count++] = write_packet.ID[i];
-		param_array[count++]= lowByte_p;
-		param_array[count++]= highByte_p;
-		param_array[count++]= 0;
-		param_array[count++]= 0;
-		param_array[count++]= lowByte_s;
-		param_array[count++]= highByte_s;
-	}
+    int num_servos = sizeof(write_packet.ID)-2;
 
-	packet.Header_1 = HEADER;
-	packet.Header_2 = HEADER;
-	packet.Packet_ID = 0xFE;
-	packet.Length = sizeof(param_array)+2;
-	packet.Instruction = COMMAND_SYNC_WRITE;
-	packet.Param = param_array;
-	packet.Checksum = getChecksum(packet);
-    AxelFlow_fire(&huart2, packet);
+
+    int param_length = 2 + num_servos * (7);
+    uint8_t param_array[param_length];
+
+
+    param_array[0] = 0x2A;
+    param_array[1] = 0x06;
+
+    int count = 2;
+    for (int i = 0; i < num_servos; i++) {
+
+        int_to_hex(write_packet.pos[i], &lowByte_p, &highByte_p);
+        int_to_hex(write_packet.time[i], &lowByte_t, &highByte_t);
+        int_to_hex(write_packet.speed[i], &lowByte_s, &highByte_s);
+
+
+        param_array[count++] = write_packet.ID[i];
+        param_array[count++] = lowByte_p;
+        param_array[count++] = highByte_p;
+        param_array[count++] = lowByte_t;
+        param_array[count++] = highByte_t;
+        param_array[count++] = lowByte_s;
+        param_array[count++] = highByte_s;
+    }
+    packet.Header_1 = 0xFF;
+    packet.Header_2 = 0xFF;
+    packet.Packet_ID = 0xFE;
+    packet.Length = param_length + 2;
+    packet.Instruction = COMMAND_SYNC_WRITE;
+    packet.Param = param_array;
+    packet.Checksum = getChecksum(packet);
+    AxelFlow_fire(&huart2, packet); // Send packet via UART
 }
 
+//void sync_Read(SyncRead_Packet read_packet){  //READS ONLY CURRENT LOCATION CHANGE PARAM ARRAY[0] TO READ ANY OTHER THING(have to change other stuff related to that too)
+//    unsigned char lowByte_p, highByte_p;
+//    unsigned char lowByte_t, highByte_t;
+//    unsigned char lowByte_s, highByte_s;
+//
+//    int param_length =sizeof(read_packet.ID);
+//    uint8_t param_array[param_length];
+//
+//
+//    int num_servos = sizeof(write_packet.ID)-2;
+//    for(i=0;i<param_length;i++){
+//    	param_array[i]= read_packet.ID[i];
+//    }
+//
+//
+//    param_array[0] = RAM_Current_location;
+//    param_array[1] = 0x02;
+//
+//
+//    int count = 2;
+//    packet.Header_1 = 0xFF;
+//    packet.Header_2 = 0xFF;
+//    packet.Packet_ID = 0xFE;
+//    packet.Length = param_length + 2;
+//    packet.Instruction = COMMAND_SYNC_READ;
+//    packet.Param = param_array;
+//    packet.Checksum = getChecksum(packet);
+//    return_packet = AxelFlow_fire(&huart2, packet);
+//}
 
 void  ID_loc_time_speed(int ID,int pos,int time,int speed){
     unsigned char lowByte_p, highByte_p;
@@ -230,16 +300,18 @@ void Operation_speed(int speed){
     AxelFlow_fire(&huart2, packet);
 }
 
-void Operation_mode(int mode){
+void Operation_mode(int ID,int mode){
 	uint8_t param_array[2]={OPERATION_MODE ,mode};
 	packet.Header_1 = HEADER;
 	packet.Header_2 = HEADER;
-	packet.Packet_ID = id;
+	packet.Packet_ID = ID;
 	packet.Length = 0x04;
 	packet.Instruction = COMMAND_WRITE_DATA;
 	packet.Param = param_array;
 	packet.Checksum = getChecksum(packet);
+	Write_LockFlag(ID,0);
     AxelFlow_fire(&huart2, packet);
+    Write_LockFlag(ID,1);
 }
 
 void Set_torque(int value){
@@ -355,19 +427,20 @@ int32_t convertHexToInteger(unsigned char hexBytes[], int byteCount) {
     }
     return result;
 }
-uint8_t int_to_hex(int decimalNumber, unsigned char *lowByte, unsigned char *highByte) {
+void int_to_hex(int decimalNumber, unsigned char *lowByte, unsigned char *highByte) {
     uint16_t hex_value;
 
-    // If value is negative, set the 15th bit
+    // If the value is negative, set the 15th bit
     if (decimalNumber < 0) {
-        hex_value = (uint16_t)(-decimalNumber) | 0x8000;  // Set the 15th bit for negative direction
+        hex_value = (uint16_t)(-decimalNumber);  // Take the absolute value
+        hex_value |= 0x8000;                    // Set the 15th bit for negative direction
     } else {
         hex_value = (uint16_t)decimalNumber;
     }
 
     // Convert to little-endian format
-    *lowByte = hex_value & 0xFF;
-    *highByte = (hex_value >> 8) & 0xFF;
+    *lowByte = hex_value & 0xFF;          // Lower byte
+    *highByte = (hex_value >> 8) & 0xFF; // Higher byte
 }
 
 
@@ -454,7 +527,78 @@ Status_Packet AxelFlow_fire(UART_HandleTypeDef *huart, Instruction_Packet ip)
 	// TODO clean out received data.
 }
 
-
+//Status_Packet AxelFlow_fire_multiple_return(UART_HandleTypeDef *huart, Instruction_Packet ip,int return_number)
+//{
+//
+//	HAL_StatusTypeDef err1, err2;
+//#ifndef DEBUG_PRINT_COMMUNICATION
+//	(void) err1, (void) err2; // silence warnings
+//#endif
+//	uint8_t Status_array[STATUS_FRAME_BUFFER];
+//	uint8_t Status_array_multiple_reutrn[return_number,STATUS_FRAME_BUFFER];
+//	memset(Status_array, 0, STATUS_FRAME_BUFFER);
+//	struct_to_arr(ip);
+//
+//	UART_HandleTypeDef huart2 = *huart;
+//
+//	err1 = HAL_UART_Transmit(&huart2, info_array, ip.Length + 4, HAL_MAX_DELAY);
+//	__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); // Enable receive interrupt after transmission
+//
+//	//FOR RECIVEING MULTIPLE SERVOS INFORMATION
+//	for(i=0;i<return_number;i++){
+//	    err2 = HAL_UART_Receive(&huart2, Status_array, STATUS_FRAME_BUFFER,
+//		STATUS_PACKET_TIMEOUT);
+//	    int x;
+//	    for(x=0;x<=sizeof(Status_array);x++){
+//	    	 Status_array_multiple_return[i,x]=Status_array[x];
+//	    }
+//	}
+//
+//	uint8_t Start_Index = 0;
+//	for (uint8_t i = 0; i < STATUS_FRAME_BUFFER - 1; i++)
+//	{
+//		if (Status_array[i] == 0xFF && Status_array[i + 1] == 0xFF
+//				&& Status_array[i + 2] != 0xFF)
+//		{
+//			Start_Index = i;
+//			break;
+//		}
+//	}
+//	uint8_t Status_array_filtered[Status_array[Start_Index + 3] + 4];
+//
+//	for (uint8_t i = 0; i < sizeof(Status_array_filtered); i++)
+//	{
+//		Status_array_filtered[i] = Status_array[Start_Index + i];
+//	}
+//	Status_Packet packet = arr_to_struct(Status_array_filtered);
+//#ifdef DEBUG_PRINT_COMMUNICATION
+//	if (err1 != HAL_OK || (err2 != HAL_OK && err2 != HAL_TIMEOUT))
+//	{
+//		char temp[10];
+//		AxelFlow_debug_println("Communication Failed :(");
+//		sprintf(temp, "err1: %u", err1);
+//		AxelFlow_debug_println(temp);
+//		sprintf(temp, "err2: %u", err2);
+//		AxelFlow_debug_println(temp);
+//	}
+//#endif
+//	//HAL_UART_Transmit(&huart1,Status_array_filtered, sizeof(Status_array_filtered), HAL_MAX_DELAY);
+////	if(packet.Error==0x00){
+////		uint8_t error[10] = "NO ERROR\n";
+////		HAL_UART_Transmit(&huart1,error, sizeof(error), HAL_MAX_DELAY);
+////	}
+////	else if(packet.Error == VOLTAGE_ERROR){
+////		uint8_t error[30] = "LOW VOLTAGE ERROR\n";
+////		HAL_UART_Transmit(&huart1,error, sizeof(error), HAL_MAX_DELAY);
+////	}
+////	else{
+////		uint8_t error[30] = "OTHERERROR\n";
+////		HAL_UART_Transmit(&huart1,error, sizeof(error), HAL_MAX_DELAY);
+////	}
+//	return packet;
+//
+//	// TODO clean out received data.
+//}
 
 bool checkChecksum()
 {

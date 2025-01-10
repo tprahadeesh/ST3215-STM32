@@ -102,7 +102,7 @@ int main(void)
 	//Operation_mode(3);
 	//Min_Max_Angle(0, 1000);
 	//Set_torque(1000);
-  //ReSetID(1,2);
+//    ReSetID(2,1);
 	//Operation_time(0);
 	//Target_location(10000);
   /* USER CODE END 2 */
@@ -117,37 +117,35 @@ int main(void)
 		//POSITION_CORRECTION(1000);
 		//Operation_speed(500)
 		//Ping(2);
-		HAL_Delay(1000);
-		uint8_t ID[2]= {1,2};
-		uint8_t pos[2]={1000,1000};
-		uint8_t time[2]={0,0};
-		uint8_t speed[2]={3000,3000};
+		//HAL_Delay(1000);
+		int ID[2]= {1,2};
+		int pos[2]={1000,0};
+		int time[2]={0,0};
+		int speed[2]={3000,3000};
 		write_packet.ID= ID;
 		write_packet.pos=pos;
 		write_packet.speed=speed;
 		write_packet.time=time;
 		Sync_write(write_packet);
-		HAL_Delay(2000);
-//		char buffer2[30];
-//		sprintf(buffer2, "%u", findID());
-//	    AxelFlow_debug_println(buffer2);
-//		HAL_Delay(1000);
+		HAL_Delay(4000);
+		char buffer2[30];
+
 //		ID_loc_time_speed(1,0,0 , 3000);
 
-//		HAL_Delay(0);
+		HAL_Delay(0);
 //		char buffer[30];
-//		sprintf(buffer, "%u", CurrentLocation(1));
+//		sprintf(buffer, "%u", findID());
 //	    AxelFlow_debug_println(buffer);
-		uint8_t ID1[2]= {1,2};
-		uint8_t pos1[2]={0,0};
-		uint8_t time1[2]={0,0};
-		uint8_t speed1[2]={3000,3000};
+		int ID1[2]= {1,2};
+		int pos1[2]={0,1000};
+		int time1[2]={0,0};
+		int speed1[2]={3000,3000};
 		write_packet.ID= ID1;
 		write_packet.pos=pos1;
 		write_packet.speed=speed1;
 		write_packet.time=time1;
 		Sync_write(write_packet);
-		HAL_Delay(2000);
+		HAL_Delay(4000);
 
 		//loc_time_speed(2,0, 0, 3000);
 //		HAL_Delay(4000);

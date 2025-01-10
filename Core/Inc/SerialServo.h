@@ -61,6 +61,7 @@ uint8_t getChecksum();
 #define COMMAND_ACTION                  0x05
 #define COMMAND_RESET                   0x06
 #define COMMAND_SYNC_WRITE              0x83
+#define COMMAND_SYNC_READ               0x82
 
 //ERRORS
 #define VOLTAGE_ERROR                   0x02
@@ -88,11 +89,23 @@ typedef struct
 
 typedef struct
 {
-	uint8_t *ID;
-	uint8_t *pos;
-	uint8_t *time;
-	uint8_t *speed ;
+	int *ID;
+	int *pos;
+	int *time;
+	int *speed;
 } SyncWrite_Packet;
+
+//typedef struct
+//{
+//	int *ID;
+//	int *Data
+//} SyncRead_Packet;
+
+//uint8_t ID[2]={};
+
+
+
+
 #ifndef AXELFLOW_SERIAL_H
 #define AXELFLOW_SERIAL_H
 
@@ -115,10 +128,10 @@ Status_Packet arr_to_struct(uint8_t array[]);
 void struct_to_arr(Instruction_Packet packet);
 void Target_location(int pos);
 void Min_Max_Angle(int min,int max);
-void Operation_mode(int mode);
+void Operation_mode(int ID,int mode);
 void Operation_speed(int speed);
 void Set_torque(int value);
-uint8_t int_to_hex(int decimalNumber, unsigned char *lowByte, unsigned char *highByte);
+void int_to_hex(int decimalNumber, unsigned char *lowByte, unsigned char *highByte);
 void Operation_time(int time);
 void POSITION_CORRECTION (int pos);
 void  ID_loc_time_speed(int ID,int pos,int time,int speed);
